@@ -32,7 +32,46 @@ ERROR_GENERATION_CONFIG_MODELS = [
 LOCAL_RANK = int(os.getenv("LOCAL_RANK", "0"))
 
 print(f"LOCAL_RANK: {LOCAL_RANK} in customized_trainer.py", flush=True)
-    
+def patch_model_metadata(output_dir: str, base_model_id: str):
+    try:
+        adapter_config_path = os.path.join(output_dir, "adapter_config.json")
+
+        if os.path.exists(adapter_config_path):
+            with open(adapter_config_path, "r") as f:
+                config = json.load(f)
+
+            config["base_model_name_or_path"] = base_model_id
+
+            with open(adapter_config_path, "w") as f:
+                json.dump(config, f, indent=2)
+
+            print(f"Updated adapter_config.json with base_model: {base_model_id}", flush=True)
+        else:
+            print(" adapter_config.json not found", flush=True)
+
+        readme_path = os.path.join(output_dir, "README.md")
+
+        if os.path.exists(readme_path):
+            with open(readme_path, "r") as f:
+                lines = f.readlines()
+
+            new_lines = []
+            for line in lines:
+                if line.strip().startswith("base_model:"):
+                    new_lines.append(f"base_model: {base_model_id}\n")
+                else:
+                    new_lines.append(line)
+
+            with open(readme_path, "w") as f:
+                f.writelines(new_lines)
+
+            print(f"Updated README.md with base_model: {base_model_id}", flush=True)
+        else:
+            print("README.md not found", flush=True)
+
+    except Exception as e:
+        print(f"Error updating metadata: {e}", flush=True)
+        pass 
 class CustomEvalSaveCallback(TrainerCallback):
     def __init__(
         self,
@@ -120,6 +159,8 @@ class CustomEvalSaveCallback(TrainerCallback):
             )
             self.update_best_checkpoint = False
             # add a loss.txt file to the submission directory
+            patch_model_metadata(self.submission_dir, self.original_model_name)
+
             with open(os.path.join(self.submission_dir, "loss.txt"), "w") as f:
                 f.write(f"{current_step},no_eval")
             
@@ -144,6 +185,7 @@ class CustomEvalSaveCallback(TrainerCallback):
             )
             self.update_best_checkpoint = False
             # add a loss.txt file to the submission directory
+            patch_model_metadata(self.submission_dir, self.original_model_name)
             with open(os.path.join(self.submission_dir, "loss.txt"), "w") as f:
                 f.write(f"{self.best_checkpoint_info['step']},{best_eval_loss}")
 
