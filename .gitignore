@@ -232,4 +232,5 @@ run_docker.sh
 run_test.py
 run_test_diffusion.py
 sample_image_task.json
+sample_image_task_diffusion.json
 test.py
