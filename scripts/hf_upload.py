@@ -125,6 +125,7 @@ def main():
         path_in_repo=repo_subfolder if repo_subfolder else None,
         commit_message=f"Upload task output {task_id}",
         token=hf_token,
+        ignore_patterns=["training_args.bin", "*.log", "wandb/", "__pycache__/", "trainer_state.json", "loss.txt"]
     )
 
     print(f"Uploaded successfully to https://huggingface.co/{repo_id}", flush=True)
