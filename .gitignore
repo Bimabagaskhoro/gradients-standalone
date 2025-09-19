@@ -229,7 +229,7 @@ scripts/test_data
 examples/
 scripts/ru*.sh
 run_docker.sh
-run_test.py
+run_test_text.py
 run_test_diffusion.py
 sample_image_task.json
 sample_text_task.json
