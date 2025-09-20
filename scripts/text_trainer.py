@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Standalone script for text model training (InstructText, DPO, and GRPO)
+Standalone script for text model training (InstructText, Chat, DPO, and GRPO)
 """
 
 import argparse
@@ -166,7 +166,7 @@ def main():
     parser.add_argument(
         "--task-type",
         required=True,
-        choices=["InstructTextTask", "DpoTask", "GrpoTask"],
+        choices=["InstructTextTask", "ChatTask", "DpoTask", "GrpoTask"],
         help="Type of task",
     )
     parser.add_argument(
@@ -200,7 +200,10 @@ def main():
     )
     
     parser.add_argument(
-        "--reg-ratio", type=float, help="Reg ratio to use for training", default=1.01
+        "--reg-ratio", type=float, help="Reg ratio to use for training", default=0.976
+    )
+    parser.add_argument(
+        "--lr-amplify-rate", type=float, help="Reg ratio to use for training", default=1.1
     )
     
     args = parser.parse_args()
@@ -267,10 +270,11 @@ def main():
         "min_steps": args.min_steps,
         "is_openai": is_openai,
         "reg_ratio": args.reg_ratio,
-        "find_lk_lr": False,
+        "find_lk_lr": True,
+        "lr_amplify_rate": args.lr_amplify_rate,
     }
 
-    if args.task_type == TaskType.INSTRUCTTEXTTASK.value:
+    if args.task_type == TaskType.INSTRUCTTEXTTASK.value or args.task_type == TaskType.CHATTASK.value:
         train_info = get_instruct_training_json(train_info)
         tokenize_cmd = (
             f"/workspace/axo_py/bin/python tokenize_instruct.py {request_path}"

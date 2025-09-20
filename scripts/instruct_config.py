@@ -1,6 +1,6 @@
 from model_utility import get_model_architecture, get_model_num_params, get_use_liger, disable_flash_attention, get_data_size, get_gpu_count
 from copy import deepcopy
-from lrs_lookup import get_instruct_lr
+from lrs_lookup import get_instruct_lr, hash_model
 
 
 FIXED_BS_CONFIG = {
@@ -253,12 +253,20 @@ def get_training_json(train_info: dict) -> dict:
     
     if train_info["find_lk_lr"]:
         # get lr from lrs_lookup.py
-        lr = get_instruct_lr(model_name)
+        lr_amplify_rate = train_info["lr_amplify_rate"]
+        lr = get_instruct_lr(model_name, lr_amplify_rate)
         if lr is not None:
             print(f"Using lr from lk: {lr}", flush=True)
             run_config["learning_rate"] = lr
         else:
             print(f"Using lr from config: {run_config['learning_rate']}", flush=True)
+    hash_model_check = hash_model(model_name)
+    print(
+        "=" * 80 + "\n"
+        f"hash_model: {hash_model_check}\n"
+        f"learning_rate: {run_config['learning_rate']}\n"
+        + "=" * 80
+    )
     
     run_config["learning_rate"] *= train_info["reg_ratio"]
     run_cmd = get_run_cmd(run_config, run_config["gpu_nums"])

@@ -20,24 +20,51 @@ def hash_model(model: str) -> str:
     return hashed 
 
 
-def get_dpo_lr(model: str):
+def get_dpo_lr(model: str, lr_amplify_rate: float):
     hashed_model = hash_model(model)
     for lr in dpo_lrs:
         if lr["h"] == hashed_model:
-            return lr["lr"]
+            val = lr["lr"] / lr_amplify_rate
+            print(
+                "=" * 80 + "\n"
+                f"[DPO]\n"
+                f"model name : {model}\n"
+                f"hash_model: {hashed_model}\n"
+                f"learning_rate: {val}\n"
+                + "=" * 80
+            )
+            return val
     return None
 
 
-def get_grpo_lr(model: str):
+def get_grpo_lr(model: str, lr_amplify_rate: float):
     hashed_model = hash_model(model)
     for lr in grpo_lrs:
         if lr["h"] == hashed_model:
-            return lr["lr"]
+            val = lr["lr"] * lr_amplify_rate
+            print(
+                "=" * 80 + "\n"
+                f"[GRPO]\n"
+                f"model name : {model}\n"
+                f"hash_model: {hashed_model}\n"
+                f"learning_rate: {val}\n"
+                + "=" * 80
+            )
+            return val
     return None
 
-def get_instruct_lr(model: str):
+def get_instruct_lr(model: str, lr_amplify_rate: float):
     hashed_model = hash_model(model)
     for lr in instruct_lrs:
         if lr["h"] == hashed_model:
-            return lr["lr"]
+            val = lr["lr"] * lr_amplify_rate
+            print(
+                "=" * 80 + "\n"
+                f"[Instruct]\n"
+                f"model name : {model}\n"
+                f"hash_model: {hashed_model}\n"
+                f"learning_rate: {val}\n"
+                + "=" * 80
+            )
+            return val
     return None

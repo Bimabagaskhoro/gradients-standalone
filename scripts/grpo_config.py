@@ -1,7 +1,12 @@
 from model_utility import get_model_architecture, get_model_num_params, get_use_liger, disable_flash_attention, get_use_vllm, get_gradient_checkpointing, get_gpu_count
 from copy import deepcopy
-from lrs_lookup import get_grpo_lr
+from lrs_lookup import get_grpo_lr, hash_model
 
+FIXED_BS_CONFIG = {
+    "falcon": {
+        "batch_size": 32
+    },
+}
 
 GRPO_CONFIG = {
     "0_1_b": {
@@ -228,7 +233,7 @@ def get_training_json(train_info: dict) -> dict:
     config = get_grpo_config(param_nums)
     print(f"config: {config}")
     run_config = {
-        "epoch_num": 2,
+        "epoch_num": 3,
         "batch_size": config["batch_size"],
         "learning_rate": config["lr"],
         "min_lr_rate": 0.25,
@@ -293,6 +298,11 @@ def get_training_json(train_info: dict) -> dict:
         elif config["label"] == "13_15_b":
             run_config["batch_size"] = 12
     
+    for names, batch_size_fix in FIXED_BS_CONFIG.items():
+        if names in model_name.lower():
+            run_config["batch_size"] = batch_size_fix
+            break
+
     total_batch_size = run_config["batch_size"] * run_config["gpu_nums"]
     if total_batch_size < 64:
         run_config["gradient_accumulation_steps"] = min(4, int(64 / total_batch_size))
@@ -315,13 +325,21 @@ def get_training_json(train_info: dict) -> dict:
     
     if train_info["find_lk_lr"]:
         # get lr from lrs_lookup.py
-        lr = get_grpo_lr(model_name)
+        lr_amplify_rate = train_info["lr_amplify_rate"]
+        lr = get_grpo_lr(model_name, lr_amplify_rate)
         if lr is not None:
             print(f"Using lr from lk: {lr}", flush=True)
             run_config["learning_rate"] = lr
         else:
             print(f"Using lr from config: {run_config['learning_rate']}", flush=True)
-    
+    hash_model_check = hash_model(model_name)
+    print(
+        "=" * 80 + "\n"
+        f"hash_model: {hash_model_check}\n"
+        f"learning_rate: {run_config['learning_rate']}\n"
+        + "=" * 80
+    )
+
     run_config["learning_rate"] *= train_info["reg_ratio"]
         
     run_cmd = get_run_cmd(run_config, run_config["gpu_nums"])
