@@ -234,3 +234,4 @@ run_test_diffusion.py
 sample_image_task.json
 sample_text_task.json
 test.py
+test-data
